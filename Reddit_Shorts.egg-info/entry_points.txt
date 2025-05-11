@@ -1,0 +1,2 @@
+[console_scripts]
+shorts = reddit_shorts.main:main

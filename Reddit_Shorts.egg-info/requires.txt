@@ -1,0 +1,15 @@
+requests>=2
+praw>=7
+toml>=0.10
+python-dotenv>=1
+ffmpeg-python>=0.2
+openai-whisper>=20231117
+pillow>=10
+google-api-python-client>=2
+google-auth-oauthlib>=1
+google-auth-httplib2>=0.2
+playsound@ git+https://github.com/taconi/playsound
+gTTS>=2.2.3
+
+[testing]
+pytest>=6

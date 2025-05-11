@@ -1,0 +1,10 @@
+[
+    {
+        "url": "https://tiktok-tts.weilnet.workers.dev/api/generation",
+        "response": "data"
+    },
+    {
+        "url": "https://gesserit.co/api/tiktok-tts",
+        "response": "base64"
+    }
+]

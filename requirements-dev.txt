@@ -1,0 +1,7 @@
+covdefaults
+coverage
+flake8
+mypy
+pre-commit
+pytest
+tox
