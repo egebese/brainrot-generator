@@ -127,6 +127,8 @@ This project generates engaging short videos from locally provided text stories.
 
 Created by [egebese](https://x.com/egebese).
 
+**Acknowledgements:** This project is a significantly modified version of the original [reddit-shorts-generator by gavink97](https://github.com/gavink97/reddit-shorts-generator.git). While the core functionality has been adapted for local use with different TTS and story input methods, much of the foundational video processing logic and project structure is derived from this original work.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=egebese/tiktok-brainrot-generator&type=Date)](https://star-history.com/#egebese/tiktok-brainrot-generator&Date)
@@ -276,4 +278,4 @@ This project is publicly available and free to use, modify, and distribute under
 
 ---
 
-*Originally based on concepts from the Reddit Shorts Generator project.*
+*This project builds upon the foundational structure and concepts from the [Reddit Shorts Generator by gavink97](https://github.com/gavink97/reddit-shorts-generator.git).*
