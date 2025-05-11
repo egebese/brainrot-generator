@@ -152,7 +152,7 @@ Created by [egebese](https://x.com/egebese).
     ```bash
     # Example using pyenv (if you have it installed)
     # pyenv install 3.11.9
-    # pyenv local 3.11.9 
+    # pyenv local 3.11.9
     ```
 2.  **FFmpeg:** Essential for video processing. It must be installed on your system and accessible via your system's PATH.
     *   **macOS (using Homebrew):** `brew install ffmpeg`
@@ -230,7 +230,7 @@ Before running, ensure the following files and directories are set up:
 3.  **Run the Video Generator:**
     Open your terminal, navigate to the project's root directory, ensure your virtual environment is activated, and run:
     ```bash
-    brainrot-gen 
+    brainrot-gen
     ```
     (This uses the new console script name defined in `setup.cfg`). Alternatively, you can still use:
     ```bash
@@ -248,33 +248,35 @@ Generated videos will appear in the `generated_shorts/` directory.
 
 ## Customization
 
-*   **Paths & Filters:** Modify `reddit_shorts/config.py` to change resource paths or update the `bad_words_list`.
-*   **Fonts & Styles:**
-    *   **Title Image Font:** The font and size for the title drawn on `reddit_submission_template.png` can be changed in `reddit_shorts/make_submission_image.py` (look for `font_name` and `title_font_size`).
-    *   **Subtitle Style:** The appearance of video subtitles (font, size, color, shadow, etc.) is controlled by an FFmpeg filter style string within `reddit_shorts/create_short.py`. Search for `force_style=` in the `ffmpeg.filter('subtitles', ...)` section.
-*   **Title Image Layout:** If you use a different `reddit_submission_template.png`, you'll likely need to adjust the title drawing coordinates (e.g., `offset_left`, `offset_top`, etc.) in `reddit_shorts/make_submission_image.py`.
-*   **Default TTS Voice:** The default TikTok voice is set in `reddit_shorts/make_tts.py` via `DEFAULT_TIKTOK_VOICE_ENUM`. You can change this by selecting a different voice from `reddit_shorts/tiktok_voice/src/voice.py`.
+*   **Video Editing:** Modify `reddit_shorts/create_short.py` to change FFmpeg parameters, subtitle styles, or video composition.
+*   **Title Image:** Adjust title placement, font, or text wrapping in `reddit_shorts/make_submission_image.py`.
+*   **TTS Voice/Options:** While the current TTS library (`mark-rez/TikTok-Voice-TTS`) offers various voices, they are typically selected by the library itself based on availability or an internal default. If you need specific voice control, you might need to explore the library's capabilities further or consider alternative TTS solutions. The current implementation in `make_tts.py` uses a default voice.
+*   **Configuration:** Edit `reddit_shorts/config.py` to change default paths, bad words list, etc.
 
 ## Troubleshooting
 
-*   **Font Not Found Errors:**
-    *   Ensure the specified fonts (e.g., "Montserrat ExtraBold") are correctly installed on your system and accessible by name.
-    *   If Pillow (the imaging library) cannot find the font by name, you may need to provide an absolute path to the `.ttf` or `.otf` font file in the code (`make_submission_image.py` for title, `create_short.py` for subtitles if using a system font there, though subtitles use FFmpeg's font finding).
-*   **FFmpeg Errors / "FFmpeg not found":**
-    *   Verify that FFmpeg is installed correctly.
-    *   Confirm that the directory containing the `ffmpeg` executable is in your system's PATH environment variable.
-*   **TTS Failures:**
-    *   The integrated TikTok TTS library relies on publicly accessible API endpoints. If these services are temporarily down or change, TTS generation might fail. Check your internet connection.
-    *   The library attempts to fall back to alternative endpoints if one fails.
-*   **`playsound` Warning on macOS:**
-    *   You might see: `playsound is relying on a python 2 subprocess...`
-    *   Installing `PyObjC` can sometimes resolve this or make it more efficient: `pip3 install PyObjC`. (This is generally for when `playsound` is used directly for playback, which isn't part of the main video generation flow but might be used in test scripts).
-*   **ModuleNotFoundError for `reddit_shorts.tiktok_voice...`:**
-    *   Ensure the `tiktok_voice` directory was correctly copied into the `reddit_shorts` directory and that your Python environment can see it (which `pip install -e .` should handle).
+*   **`ffmpeg: command not found`**: Ensure FFmpeg is installed and in your system's PATH.
+*   **Font errors (e.g., "Font not found")**: Make sure "Montserrat ExtraBold" (or your chosen font) is installed correctly and accessible by name. If not, you may need to provide the full path to the font file in the scripts.
+*   **TTS Issues**: If TTS fails:
+    *   Check your internet connection, as the TikTok TTS library communicates with web services.
+    *   The underlying API used by the TTS library can sometimes be unreliable. Retrying might help.
+    *   Look for any error messages from the `tiktok_voice` library.
+*   **No videos generated**:
+    *   Verify `stories.txt` is correctly formatted and not empty.
+    *   Ensure `resources/footage/` has at least one `.mp4` file.
+    *   Ensure `resources/music/` has music files.
+    *   Check `resources/images/reddit_submission_template.png` exists.
+    *   Look for errors in the console output.
+
+## Acknowledgements
+
+*   This project is a heavily modified fork of [gavink97/reddit-shorts-generator](https://github.com/gavink97/reddit-shorts-generator). Many thanks to the original author for the foundational work.
+*   Uses the [mark-rez/TikTok-Voice-TTS](https://github.com/mark-rez/TikTok-Voice-TTS) library for text-to-speech.
+*   Inspired by the trend of automated content generation for short-form video platforms.
 
 ## License
 
-This project is publicly available and free to use, modify, and distribute under the terms of the MIT License. See the `LICENSE` file for more details.
+This project is currently unlicensed, inheriting the original [MIT License](https://github.com/gavink97/reddit-shorts-generator/blob/main/LICENSE) from the upstream repository where applicable to original code sections. New modifications by egebese are also effectively under MIT-style permissions unless otherwise specified. Please check the original license for more details on the base code.
 
 ---
 
