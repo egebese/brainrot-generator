@@ -157,4 +157,4 @@ This project is currently unlicensed, inheriting the original [MIT License](http
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=egebese/tiktok-brainrot-generator&type=Date)](https://star-history.com/#egebese/tiktok-brainrot-generator&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=egebese/tiktok-brainrot-generator&type=Date)](https://www.star-history.com/#egebese/tiktok-brainrot-generator&Date)

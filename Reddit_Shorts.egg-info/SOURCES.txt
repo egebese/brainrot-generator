@@ -20,6 +20,6 @@ reddit_shorts/make_submission_image.py
 reddit_shorts/make_tts.py
 reddit_shorts/make_youtube_metadata.py
 reddit_shorts/query_db.py
-reddit_shorts/tiktok_tts.py
 reddit_shorts/upload_to_youtube.py
 reddit_shorts/utils.py
+reddit_shorts/tiktok_voice/__init__.py
