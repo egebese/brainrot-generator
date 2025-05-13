@@ -37,7 +37,8 @@ def run_local_video_generation(**kwargs) -> str | None:
         title=story_title,
         text_content=story_selftext,
         story_id=story_id,
-        temp_dir=current_story_temp_dir
+        temp_dir=current_story_temp_dir,
+        **kwargs # Pass through kwargs which should include the 'voice' parameter
     )
 
     video_tts_path = tts_paths.get('video_tts_path')

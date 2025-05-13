@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Let's configure your video</h1>
+        
+        <!-- Script Input -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Your Video Script</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2">Title</label>
+                    <input v-model="script.title" type="text" class="w-full bg-gray-700 rounded p-2">
+                </div>
+                <div>
+                    <label class="block mb-2">Story</label>
+                    <textarea v-model="script.story" rows="6" class="w-full bg-gray-700 rounded p-2"></textarea>
+                </div>
+                <div class="text-sm text-gray-400">
+                    Number of words: {{ wordCount }}
+                    <br>
+                    Estimated video duration: {{ estimatedDuration }} seconds
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Video Selection -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Select a Background Video</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div v-for="video in backgrounds"
+                     :key="video.id"
+                     @click="selectBackground(video)"
+                     :class="['rounded-lg overflow-hidden cursor-pointer border-2',
+                             script.background_video === video.id ? 'border-blue-500' : 'border-transparent']">
+                    <!-- Applying 9:16 aspect ratio using padding-top trick on a wrapper -->
+                    <div class="relative w-full" style="padding-top: 177.77%;"> <!-- 16/9 ratio for height based on width -->
+                        <img :src="video.thumbnail || 'placeholder.jpg'"
+                             class="absolute top-0 left-0 w-full h-full object-cover">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 text-center">
+                            <p class="text-sm truncate">{{ video.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Selection -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Select Voice</h2>
+            <div class="overflow-x-auto mb-4">
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Code</th>
+                            <th scope="col" class="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Preview</th>
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-gray-800 divide-y divide-gray-700">
+                        <tr v-for="voice in paginatedVoices" :key="voice.id"
+                            :class="[script.voice === voice.id ? 'bg-gray-750' : '']"> {/* Slightly different bg for selected row */}
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-white">{{ voice.name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-300 truncate" style="max-width: 150px;">{{ voice.id }}</td>
+                            <td class="hidden sm:table-cell px-4 py-3 whitespace-nowrap text-sm text-gray-300">{{ voice.category }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                <button @click.stop="previewVoice(voice)"
+                                        class="px-3 py-1 bg-blue-600 rounded-md hover:bg-blue-700 text-xs">
+                                    Preview
+                                </button>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-center">
+                                <button @click="selectVoice(voice)"
+                                        :class="['px-3 py-1 rounded-md text-xs w-20', script.voice === voice.id ? 'bg-green-500 text-white' : 'bg-gray-600 hover:bg-gray-500']">
+                                    {{ script.voice === voice.id ? 'Selected' : 'Select' }}
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-if="paginatedVoices.length === 0 && allVoices.length > 0">
+                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-400">No voices on this page.</td>
+                        </tr>
+                        <tr v-if="allVoices.length === 0">
+                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-400">No voices loaded.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div v-if="totalPages > 1" class="mt-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-400">
+                        Page <span class="font-medium">{{ currentPage }}</span> of <span class="font-medium">{{ totalPages }}</span>
+                        <span class="ml-4"> (Total: <span class="font-medium">{{ allVoices.length }}</span> voices)</span>
+                    </p>
+                </div>
+                <div class="flex space-x-2">
+                    <button @click="prevPage" :disabled="currentPage === 1"
+                            class="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                        Previous
+                    </button>
+                    <button @click="nextPage" :disabled="currentPage === totalPages"
+                            class="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Music Selection -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Select Background Music</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <div v-for="track in music" 
+                     :key="track.id"
+                     @click="selectMusic(track)"
+                     :class="['flex items-center p-4 rounded-lg cursor-pointer border-2',
+                             script.background_music === track.id ? 'border-blue-500 bg-gray-700' : 'border-transparent']">
+                    <div class="flex-1">
+                        <h3 class="font-semibold">{{ track.name }}</h3>
+                        <p class="text-sm text-gray-400">Type: {{ track.type }}</p>
+                    </div>
+                    <button @click.stop="previewMusic(track)" 
+                            class="px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700">
+                        Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Options -->
+        <div class="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Advanced options</h2>
+            <div class="space-y-4">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" v-model="script.filter" class="form-checkbox">
+                    <span>Enable profanity filter</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <button @click="generateVideo" 
+                :disabled="isGenerating"
+                class="w-full bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-4 px-8 rounded-lg hover:opacity-90 disabled:opacity-50">
+            {{ isGenerating ? 'Generating Video...' : 'Generate Video' }}
+        </button>
+
+        <p class="text-center mt-4 text-gray-400">
+            {{ usageCount }} people used this tool in the last 24h
+        </p>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    script: {
+                        title: '',
+                        story: '',
+                        background_video: null,
+                        voice: null,
+                        background_music: null,
+                        filter: false
+                    },
+                    backgrounds: [],
+                    allVoices: [],
+                    music: [],
+                    isGenerating: false,
+                    usageCount: 2196,
+                    audioPlayer: null,
+                    currentPlayingMusic: null,
+                    currentPage: 1,
+                    itemsPerPage: 5
+                }
+            },
+            computed: {
+                wordCount() {
+                    return this.script.story.split(/\s+/).filter(Boolean).length
+                },
+                estimatedDuration() {
+                    // Rough estimate: 2.5 words per second
+                    return Math.round(this.wordCount / 2.5)
+                },
+                paginatedVoices() {
+                    if (!this.allVoices) return [];
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.allVoices.slice(start, end);
+                },
+                totalPages() {
+                    if (!this.allVoices || this.allVoices.length === 0) return 0;
+                    return Math.ceil(this.allVoices.length / this.itemsPerPage);
+                }
+            },
+            methods: {
+                async loadResources() {
+                    try {
+                        const [bgResponse, voiceResponse, musicResponse] = await Promise.all([
+                            axios.get('/api/backgrounds'),
+                            axios.get('/api/voices'),
+                            axios.get('/api/music')
+                        ])
+                        this.backgrounds = bgResponse.data
+                        this.allVoices = voiceResponse.data
+                        this.music = musicResponse.data
+                        if (this.currentPage > this.totalPages && this.totalPages > 0) {
+                            this.currentPage = this.totalPages;
+                        } else if (this.totalPages === 0) {
+                            this.currentPage = 1;
+                        }
+                    } catch (error) {
+                        console.error('Error loading resources:', error)
+                        this.allVoices = [];
+                    }
+                },
+                selectBackground(video) {
+                    this.script.background_video = video.id
+                },
+                selectVoice(voice) {
+                    this.script.voice = voice.id
+                },
+                selectMusic(track) {
+                    this.script.background_music = track.id
+                },
+                async previewVoice(voice) {
+                    console.log('Preview voice:', voice.name)
+                },
+                previewMusic(track) {
+                    if (!this.audioPlayer) {
+                        this.audioPlayer = new Audio();
+                        this.audioPlayer.addEventListener('ended', () => {
+                            this.currentPlayingMusic = null;
+                        });
+                    }
+                    
+                    if (this.currentPlayingMusic === track.path && !this.audioPlayer.paused) {
+                        this.audioPlayer.pause();
+                        this.currentPlayingMusic = null;
+                    } else {
+                        this.audioPlayer.src = track.path;
+                        this.audioPlayer.play().catch(e => console.error("Error playing audio:", e));
+                        this.currentPlayingMusic = track.path;
+                    }
+                },
+                async generateVideo() {
+                    if (this.isGenerating) return
+
+                    if (!this.script.voice) {
+                        alert('Please select a voice before generating the video.');
+                        return;
+                    }
+
+                    this.isGenerating = true
+                    try {
+                        const response = await axios.post('/api/generate', this.script, {
+                            responseType: 'blob'
+                        })
+                        
+                        // Create download link for the video
+                        const url = window.URL.createObjectURL(new Blob([response.data]))
+                        const link = document.createElement('a')
+                        link.href = url
+                        link.setAttribute('download', 'generated_video.mp4')
+                        document.body.appendChild(link)
+                        link.click()
+                        link.remove()
+                        window.URL.revokeObjectURL(url)
+                    } catch (error) {
+                        console.error('Error generating video:', error)
+                        alert('Failed to generate video. Please try again.')
+                    } finally {
+                        this.isGenerating = false
+                    }
+                },
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                    }
+                },
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                    }
+                }
+            },
+            mounted() {
+                this.loadResources()
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html> 

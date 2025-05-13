@@ -86,13 +86,25 @@ def generate_gtts_for_story(title: str, text_content: str, story_id: str, temp_d
         'content_tts_path': content_tts_path # Matching key expected by create_short_video (originally narrator_content_track)
     }
 
-def generate_tiktok_tts_for_story(title: str, text_content: str, story_id: str, temp_dir: str) -> dict:
+def generate_tiktok_tts_for_story(title: str, text_content: str, story_id: str, temp_dir: str, **kwargs) -> dict:
     """
     Generates TTS audio for title and content using the mark-rez/TikTok-Voice-TTS library
     and saves them to the specified temp_dir.
+    Accepts an optional 'voice' kwarg for the voice code (e.g., 'en_us_002').
     Returns a dictionary with paths to the generated TTS files.
     """
     generated_paths = {'video_tts_path': None, 'content_tts_path': None}
+    selected_voice_code = kwargs.get('voice', None)
+    
+    active_voice_enum = DEFAULT_TIKTOK_VOICE_ENUM
+    if selected_voice_code:
+        try:
+            # Attempt to get the Voice enum member by its value (the voice code string)
+            active_voice_enum = Voice(selected_voice_code)
+            print(f"Using selected voice: {selected_voice_code} ({active_voice_enum.name})")
+        except ValueError:
+            print(f"Warning: Invalid voice code '{selected_voice_code}' provided. Falling back to default voice {DEFAULT_TIKTOK_VOICE_ENUM.value}.")
+            # active_voice_enum remains DEFAULT_TIKTOK_VOICE_ENUM
 
     if not title and not text_content:
         print("Error: Both title and text content are empty. Cannot generate TTS.")
@@ -109,7 +121,7 @@ def generate_tiktok_tts_for_story(title: str, text_content: str, story_id: str, 
         try:
             tiktok_library_tts(
                 text=title,
-                voice=DEFAULT_TIKTOK_VOICE_ENUM,
+                voice=active_voice_enum,
                 output_file_path=title_tts_path,
                 play_sound=False
             )
@@ -134,7 +146,7 @@ def generate_tiktok_tts_for_story(title: str, text_content: str, story_id: str, 
             # For content, the library handles splitting long text internally
             tiktok_library_tts(
                 text=text_content,
-                voice=DEFAULT_TIKTOK_VOICE_ENUM,
+                voice=active_voice_enum,
                 output_file_path=content_tts_path,
                 play_sound=False
             )

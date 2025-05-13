@@ -1,0 +1,33 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Project Structure and Script Running Guide
+
+This project generates short-form videos from local stories, combining TikTok TTS narration, background video, music, and a title overlay.
+
+## Main Entry Points
+- The main script is [reddit_shorts/main.py](mdc:reddit_shorts/main.py). It is run via the console script `shorts` or with `python -m reddit_shorts.main`.
+- The console script is defined in [setup.cfg](mdc:setup.cfg) under `[options.entry_points]` as `shorts = reddit_shorts.main:main`.
+
+## How Script Running Works
+- The main script loads a story from [stories.txt](mdc:stories.txt) using [reddit_shorts/get_reddit_stories.py](mdc:reddit_shorts/get_reddit_stories.py).
+- It generates TTS audio using the TikTok TTS library ([reddit_shorts/tiktok_voice/](mdc:reddit_shorts/tiktok_voice/)), called from [reddit_shorts/make_tts.py](mdc:reddit_shorts/make_tts.py).
+- A title image is generated with [reddit_shorts/make_submission_image.py](mdc:reddit_shorts/make_submission_image.py).
+- The final video is assembled in [reddit_shorts/create_short.py](mdc:reddit_shorts/create_short.py), combining narration, music, background video, and subtitles.
+- Output videos are saved to the [generated_shorts/](mdc:generated_shorts/) directory.
+
+## Key Project Files and Folders
+- [reddit_shorts/](mdc:reddit_shorts/): Main Python package with all logic.
+- [resources/](mdc:resources/): Contains background videos, music, and images (ignored by git).
+- [generated_shorts/](mdc:generated_shorts/): Output directory for generated videos (ignored by git).
+- [temp/](mdc:temp/): Temporary files and intermediate assets (ignored by git).
+- [stories.txt](mdc:stories.txt): Input stories in a specific format.
+
+## Running the Project
+- Activate your Python virtual environment.
+- Run `shorts` or `python -m reddit_shorts.main` from the project root.
+- Optionally use `--filter` to enable the profanity filter.
+
+See [README.md](mdc:README.md) for more details and setup instructions.

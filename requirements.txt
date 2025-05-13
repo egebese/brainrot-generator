@@ -1,0 +1,9 @@
+flask>=2.0.0
+flask-cors>=4.0.0
+requests>=2.31.0
+playsound==1.2.2
+moviepy>=1.0.3
+pillow>=10.0.0
+numpy>=1.24.0
+pyttsx3>=2.90
+python-dotenv>=1.0.0 

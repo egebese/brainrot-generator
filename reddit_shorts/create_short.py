@@ -78,10 +78,22 @@ def create_short_video(**kwargs) -> str | None:
     # Using a fixed name for SRT within its temp dir for Whisper, will be specific to this run.
     tts_combined_srt_path = os.path.join(temp_processing_dir, "subtitles.srt") 
 
-    if not footage:
-        print("Error: No background footage available. Please check config and resources directory.")
+    # --- Background Video Selection ---
+    selected_video_path_from_kwargs = kwargs.get('background_video') # Get the path from UI
+    video_to_use = None
+
+    if selected_video_path_from_kwargs and os.path.exists(selected_video_path_from_kwargs):
+        video_to_use = selected_video_path_from_kwargs
+        print(f"Using selected background video: {video_to_use}")
+    elif footage: # Fallback to random if selection is invalid or not provided
+        print(f"Warning: Selected background video '{selected_video_path_from_kwargs}' not found, not provided, or invalid. Using a random video from config.")
+        video_to_use = random.choice(footage)
+        print(f"Randomly selected background video: {video_to_use}")
+    else:
+        print("Error: No background footage available (neither selected nor in config). Please check config and resources directory.")
+        shutil.rmtree(temp_processing_dir, ignore_errors=True)
         return None
-    random_video_path = random.choice(footage)
+    # --- End Background Video Selection ---
 
     if not music:
         print("Warning: No music available. Video will be created without music.")
@@ -219,16 +231,16 @@ def create_short_video(**kwargs) -> str | None:
         final_audio_stream_for_video = narration_audio_stream
 
     # Video Processing
-    if not os.path.exists(random_video_path):
-        print(f"Error: Selected background video {random_video_path} not found.")
+    if not os.path.exists(video_to_use): # Check video_to_use instead of random_video_path
+        print(f"Error: Selected background video {video_to_use} not found.")
         shutil.rmtree(temp_processing_dir, ignore_errors=True)
         return None
         
-    video_duration = get_video_duration(random_video_path)
+    video_duration = get_video_duration(video_to_use) # Use video_to_use
     video_input_options = {}
 
     if video_duration == 0.0:
-        print(f"Error: Background video {random_video_path} has zero duration. Cannot use this video.")
+        print(f"Error: Background video {video_to_use} has zero duration. Cannot use this video.") # Use video_to_use
         shutil.rmtree(temp_processing_dir, ignore_errors=True)
         return None
 
@@ -248,9 +260,9 @@ def create_short_video(**kwargs) -> str | None:
 
     resource_video_clipped = (
         ffmpeg
-        .input(random_video_path, **video_input_options)
-        .filter('crop', 'ih*9/16', 'ih', '(iw-ih*9/16)/2', '0') # Centered crop to 9:16
-        .filter('scale', '1080', '1920')
+        .input(video_to_use, **video_input_options) # Use video_to_use
+        .crop(x='(iw-ow)/2', y='(ih-oh)/2', width='ih*9/16', height='ih')
+        .filter('scale', width=1080, height=1920)
         .filter('setpts', 'PTS-STARTPTS') # Reset timestamps after trimming/looping
         )
 
